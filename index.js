@@ -23,23 +23,23 @@ app.get('/categories',async(req,res)=>{
     const options=await categoriesOptionsCollections.find(query).toArray();
     res.send(options);
 });
-// app.get('/products',async(req,res)=>{
-//     const query={};
-//     const options=await allProductsCollections.find(query).toArray();
-//     res.send(options);
-// });
-// app.get('/categories/:id',async(req,res)=>{
-//     const id=req.params.id;
-//     const query={};
-//     const categoryQuery={category:id};
-//     const productOptions=await allProductsCollections.find(query).toArray();
-//     const filterCategory=await categoriesOptionsCollections.findOne(categoryQuery);
-//     console.log(filterCategory);
-//     const filterProducts=productOptions.filter(option=>
-//         option.category_value===filterCategory.category
-//     );
-//     res.send(filterProducts);
-// })
+app.get('/products',async(req,res)=>{
+    const query={};
+    const options=await allProductsCollections.find(query).toArray();
+    res.send(options);
+});
+app.get('/categories/:id',async(req,res)=>{
+    const id=req.params.id;
+    const query={};
+    const categoryQuery={category:id};
+    const productOptions=await allProductsCollections.find(query).toArray();
+    const filterCategory=await categoriesOptionsCollections.findOne(categoryQuery);
+    console.log(filterCategory);
+    const filterProducts=productOptions.filter(option=>
+        option.category_value===filterCategory.category
+    );
+    res.send(filterProducts);
+})
 }
 finally{
 
