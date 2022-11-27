@@ -12,9 +12,41 @@ app.use(express.json());
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ksontsm.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri)
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+//***Function started */
+async function run(){
+try{
+const categoriesOptionsCollections=client.db('xwatch-factor').collection('categoriesCollections');
+const allProductsCollections=client.db('xwatch-factor').collection('productsCollections')
+app.get('/categories',async(req,res)=>{
+    const query={};
+    const options=await categoriesOptionsCollections.find(query).toArray();
+    res.send(options);
+});
+// app.get('/products',async(req,res)=>{
+//     const query={};
+//     const options=await allProductsCollections.find(query).toArray();
+//     res.send(options);
+// });
+// app.get('/categories/:id',async(req,res)=>{
+//     const id=req.params.id;
+//     const query={};
+//     const categoryQuery={category:id};
+//     const productOptions=await allProductsCollections.find(query).toArray();
+//     const filterCategory=await categoriesOptionsCollections.findOne(categoryQuery);
+//     console.log(filterCategory);
+//     const filterProducts=productOptions.filter(option=>
+//         option.category_value===filterCategory.category
+//     );
+//     res.send(filterProducts);
+// })
+}
+finally{
 
+}
+}
+run().catch(console.log);
+//***Function End */
 
 //mongodb ending
 app.get('/',async(req,res)=>{
