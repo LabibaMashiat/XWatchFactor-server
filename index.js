@@ -17,7 +17,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
 try{
 const categoriesOptionsCollections=client.db('xwatch-factor').collection('categoriesCollections');
-const allProductsCollections=client.db('xwatch-factor').collection('productsCollections')
+const allProductsCollections=client.db('xwatch-factor').collection('productsCollections');
+const usersCollection=client.db('xwatch-factor').collection('users');
 app.get('/categories',async(req,res)=>{
     const query={};
     const options=await categoriesOptionsCollections.find(query).toArray();
@@ -39,7 +40,17 @@ app.get('/categories/:id',async(req,res)=>{
         option.category_value===filterCategory.category
     );
     res.send(filterProducts);
-})
+});
+app.get('/users',async(req,res)=>{
+    const query={};
+    const result=await usersCollection.find(query).toArray();
+    res.send(result);
+});
+app.post('/users',async(req,res)=>{
+    const user=req.body;
+    const result=await usersCollection.insertOne(user);
+    res.send(result);
+});
 }
 finally{
 
