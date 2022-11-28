@@ -51,6 +51,11 @@ app.post('/users',async(req,res)=>{
     const result=await usersCollection.insertOne(user);
     res.send(result);
 });
+app.post('/products',async(req,res)=>{
+    const product=req.body;
+    const result=await allProductsCollections.insertOne(product);
+    res.send(result);
+});
 }
 finally{
 
