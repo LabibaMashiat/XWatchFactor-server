@@ -29,6 +29,12 @@ app.get('/products',async(req,res)=>{
     const options=await allProductsCollections.find(query).toArray();
     res.send(options);
 });
+app.get('/products/:email',async(req,res)=>{
+    const email=req.params.email;
+    const query={sellers_email:email};
+    const sellerProducts=await allProductsCollections.find(query).toArray();
+    res.send(sellerProducts);
+})
 app.get('/categories/:id',async(req,res)=>{
     const id=req.params.id;
     const query={};
@@ -46,6 +52,16 @@ app.get('/users',async(req,res)=>{
     const result=await usersCollection.find(query).toArray();
     res.send(result);
 });
+// app.get('/addUsersStatus',async(req,res)=>{
+//     const filter={}
+//     const options={upsert:true}
+//     const updateDoc={
+//         $set:{
+//            status:"Seller"
+//         }
+//     }
+//     const result=await usersCollection.updateMany(filter,updateDoc,options);
+// });
 app.post('/users',async(req,res)=>{
     const user=req.body;
     const result=await usersCollection.insertOne(user);
