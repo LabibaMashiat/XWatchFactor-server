@@ -10,7 +10,7 @@ app.use(express.json());
 
 //mongodb starting
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ksontsm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 //***Function started */
@@ -19,6 +19,7 @@ try{
 const categoriesOptionsCollections=client.db('xwatch-factor').collection('categoriesCollections');
 const allProductsCollections=client.db('xwatch-factor').collection('productsCollections');
 const usersCollection=client.db('xwatch-factor').collection('users');
+const bookingsCollection=client.db('xwatch-factor').collection('bookings');
 app.get('/categories',async(req,res)=>{
     const query={};
     const options=await categoriesOptionsCollections.find(query).toArray();
@@ -62,6 +63,18 @@ app.get('/users',async(req,res)=>{
 //     }
 //     const result=await usersCollection.updateMany(filter,updateDoc,options);
 // });
+app.get('/bookings',async(req,res)=>{
+    const filter={}
+    const booking=req.body;
+    console.log(booking);
+    const options={upsert:true}
+    const updateDoc={
+        $set:{
+           picture: booking.picture
+        }
+    }
+    const result=await bookingsCollection.updateMany(filter,updateDoc,options);
+});
 app.post('/users',async(req,res)=>{
     const user=req.body;
     const result=await usersCollection.insertOne(user);
@@ -70,6 +83,42 @@ app.post('/users',async(req,res)=>{
 app.post('/products',async(req,res)=>{
     const product=req.body;
     const result=await allProductsCollections.insertOne(product);
+    res.send(result);
+});
+app.post('/bookings',async(req,res)=>{
+
+    const booking=req.body;
+    const result=await bookingsCollection.insertOne(booking);
+    res.send(result);
+});
+app.get('/bookings/:email',async(req,res)=>{
+    const email=req.params.email;
+    const query={buyers_email:email};
+    const bookingProducts=await bookingsCollection.find(query).toArray();
+    res.send(bookingProducts);
+
+});
+app.get('/advertisedProducts/:id',async(req,res)=>{
+const id=req.params.id;
+const filterId={_id: ObjectId(id)}
+const advertisedProduct=await allProductsCollections.findOne(filterId);
+// const advertisedProducts=await allProductsCollections.findOne(filterId);
+// const query={};
+// const allProducts=await allProductsCollections.find(query).toArray();
+// const advertisedAllProducts=allProducts.filter(pr=>pr._id===filterId);
+res.send(advertisedProduct);
+});
+app.delete('/allproducts/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id: ObjectId(id)};
+    const result=await allProductsCollections.deleteOne(filter);
+    res.send(result);
+});
+app.get('/allproducts/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id: ObjectId(id)};
+    console.log(filter)
+    const result=await allProductsCollections.findOne(filter);
     res.send(result);
 });
 }
