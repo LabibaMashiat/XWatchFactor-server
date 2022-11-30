@@ -30,6 +30,11 @@ app.get('/products',async(req,res)=>{
     const options=await allProductsCollections.find(query).toArray();
     res.send(options);
 });
+app.get('/bookings',async(req,res)=>{
+    const query={};
+    const options=await bookingsCollection.find(query).toArray();
+    res.send(options);
+});
 app.get('/products/:email',async(req,res)=>{
     const email=req.params.email;
     const query={sellers_email:email};
@@ -70,7 +75,8 @@ app.get('/bookings',async(req,res)=>{
     const options={upsert:true}
     const updateDoc={
         $set:{
-           picture: booking.picture
+           picture: booking.picture,
+           resale_price:booking.resale_price
         }
     }
     const result=await bookingsCollection.updateMany(filter,updateDoc,options);
@@ -102,16 +108,19 @@ app.get('/advertisedProducts/:id',async(req,res)=>{
 const id=req.params.id;
 const filterId={_id: ObjectId(id)}
 const advertisedProduct=await allProductsCollections.findOne(filterId);
-// const advertisedProducts=await allProductsCollections.findOne(filterId);
-// const query={};
-// const allProducts=await allProductsCollections.find(query).toArray();
-// const advertisedAllProducts=allProducts.filter(pr=>pr._id===filterId);
+
 res.send(advertisedProduct);
 });
 app.delete('/allproducts/:id',async(req,res)=>{
     const id=req.params.id;
     const filter={_id: ObjectId(id)};
     const result=await allProductsCollections.deleteOne(filter);
+    res.send(result);
+});
+app.delete('/users/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id: ObjectId(id)};
+    const result=await usersCollection.deleteOne(filter);
     res.send(result);
 });
 app.get('/allproducts/:id',async(req,res)=>{
