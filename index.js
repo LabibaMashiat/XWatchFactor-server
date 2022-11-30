@@ -68,18 +68,38 @@ app.get('/users',async(req,res)=>{
 //     }
 //     const result=await usersCollection.updateMany(filter,updateDoc,options);
 // });
-app.get('/bookings',async(req,res)=>{
-    const filter={}
-    const booking=req.body;
-    console.log(booking);
-    const options={upsert:true}
+
+app.get('/users/admin/:email',async(req,res)=>{
+    const email=req.params.email;
+    const filter={email:email}
+    const user=await usersCollection.findOne(filter);
+    res.send({isAdmin : user?.role==='admin'});
+});
+app.get('/users/:email',async(req,res)=>{
+    const email=req.params.email;
+    const filter={email:email}
+    const user=await usersCollection.findOne(filter);
+    res.send({isSeller:user?.status==='Seller'})
+
+})
+app.get('/allusers/:email',async(req,res)=>{
+    const email=req.params.email;
+    const filter={email:email}
+    const user=await usersCollection.findOne(filter);
+    res.send({isBuyer:user?.status==='Buyer'})
+
+})
+app.put('/users/admin/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id:ObjectId(id)}
+    const options={upsert:true};
     const updateDoc={
         $set:{
-           picture: booking.picture,
-           resale_price:booking.resale_price
+            role:'admin'
         }
     }
-    const result=await bookingsCollection.updateMany(filter,updateDoc,options);
+    const result=await usersCollection.updateOne(filter,updateDoc,options);
+    res.send(result);
 });
 app.post('/users',async(req,res)=>{
     const user=req.body;
