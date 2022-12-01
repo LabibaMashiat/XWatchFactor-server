@@ -20,6 +20,7 @@ const categoriesOptionsCollections=client.db('xwatch-factor').collection('catego
 const allProductsCollections=client.db('xwatch-factor').collection('productsCollections');
 const usersCollection=client.db('xwatch-factor').collection('users');
 const bookingsCollection=client.db('xwatch-factor').collection('bookings');
+const wishListsCollection=client.db('xwatch-factor').collection('wishLists');
 app.get('/categories',async(req,res)=>{
     const query={};
     const options=await categoriesOptionsCollections.find(query).toArray();
@@ -113,6 +114,16 @@ app.put('/users/admin/:id',async(req,res)=>{
     const result=await usersCollection.updateOne(filter,updateDoc,options);
     res.send(result);
 });
+app.get('/allSellers',async(req,res)=>{
+    const query={status:'Seller'}
+    const result=await usersCollection.find(query).toArray();
+    res.send(result);
+})
+app.get('/allBuyers',async(req,res)=>{
+    const query={status:'Buyer'}
+    const result=await usersCollection.find(query).toArray();
+    res.send(result);
+})
 app.post('/users',async(req,res)=>{
     const user=req.body;
     const result=await usersCollection.insertOne(user);
@@ -122,6 +133,22 @@ app.post('/products',async(req,res)=>{
     const product=req.body;
     const result=await allProductsCollections.insertOne(product);
     res.send(result);
+});
+app.post('/products/wishlists',async(req,res)=>{
+    const wishlist=req.body;
+    const result=await wishListsCollection.insertOne(wishlist);
+    res.send(result);
+});
+app.get('/products/wishlists',async(req,res)=>{
+    const query={};
+    const result=await wishListsCollection.find(query);
+    res.send(result);
+});
+app.get('/products/wishlists/:email',async(req,res)=>{
+    const email=req.params.email;
+    const filter={email:email}
+    const result=await wishListsCollection.find(filter).toArray();
+    res.send(result)
 });
 app.post('/bookings',async(req,res)=>{
 
