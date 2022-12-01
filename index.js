@@ -71,16 +71,6 @@ app.get('/users',async(req,res)=>{
     const result=await usersCollection.find(query).toArray();
     res.send(result);
 });
-// app.get('/addUsersStatus',async(req,res)=>{
-//     const filter={}
-//     const options={upsert:true}
-//     const updateDoc={
-//         $set:{
-//            status:"Seller"
-//         }
-//     }
-//     const result=await usersCollection.updateMany(filter,updateDoc,options);
-// });
 
 app.get('/users/admin/:email',async(req,res)=>{
     const email=req.params.email;
@@ -90,7 +80,7 @@ app.get('/users/admin/:email',async(req,res)=>{
 });
 app.get('/users/:email',async(req,res)=>{
     const email=req.params.email;
-    const filter={email:email}
+    const filter={email:email,seller_verified:true}
     const user=await usersCollection.findOne(filter);
     res.send({isSeller:user?.status==='Seller'})
 
@@ -114,6 +104,18 @@ app.put('/users/admin/:id',async(req,res)=>{
     const result=await usersCollection.updateOne(filter,updateDoc,options);
     res.send(result);
 });
+app.put('/verifiedSeller/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id:ObjectId(id),status:'Seller'}
+    const options={upsert:true};
+    const updateDoc={
+        $set:{
+            seller_verified:true
+        }
+    }
+    const result=await usersCollection.updateOne(filter,updateDoc,options);
+    res.send(result);
+});
 app.get('/allSellers',async(req,res)=>{
     const query={status:'Seller'}
     const result=await usersCollection.find(query).toArray();
@@ -129,6 +131,7 @@ app.post('/users',async(req,res)=>{
     const result=await usersCollection.insertOne(user);
     res.send(result);
 });
+
 app.post('/products',async(req,res)=>{
     const product=req.body;
     const result=await allProductsCollections.insertOne(product);
