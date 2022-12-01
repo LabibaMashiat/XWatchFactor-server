@@ -30,6 +30,18 @@ app.get('/products',async(req,res)=>{
     const options=await allProductsCollections.find(query).toArray();
     res.send(options);
 });
+app.put('/allproducts/:id',async(req,res)=>{
+    const id=req.params.id;
+    const filter={_id:ObjectId(id)}
+    const options={upsert:true};
+    const updateDoc={
+        $set:{
+            advertised: true
+        }
+    }
+    const result=await allProductsCollections.updateOne(filter,updateDoc,options);
+    res.send(result);
+});
 app.get('/bookings',async(req,res)=>{
     const query={};
     const options=await bookingsCollection.find(query).toArray();
@@ -120,6 +132,13 @@ app.post('/bookings',async(req,res)=>{
 app.get('/bookings/:email',async(req,res)=>{
     const email=req.params.email;
     const query={buyers_email:email};
+    const bookingProducts=await bookingsCollection.find(query).toArray();
+    res.send(bookingProducts);
+
+});
+app.get('/allbookings/:email',async(req,res)=>{
+    const email=req.params.email;
+    const query={sellers_email:email};
     const bookingProducts=await bookingsCollection.find(query).toArray();
     res.send(bookingProducts);
 
