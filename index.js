@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const port=process.env.PORT || 5000;
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const app=express();
 
 //middleware
@@ -13,6 +14,25 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ksontsm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+
+function verifyJWT(req,res,next){
+ const authHeader=req.headers.authorization;
+ console.log(authHeader);
+ if(!authHeader){
+    return res.status(401).send('unauthorised access');
+ }
+ const token=authHeader.split(' ')[1];
+ jwt.verify(token,process.env.ACCESS_TOKEN,function(err,decoded){
+    if(err){
+        return res.status(403).send({message: 'forbidden access'})
+    }
+    req.decoded=decoded;
+    next();
+ })
+};
+
+
 //***Function started */
 async function run(){
 try{
@@ -21,6 +41,16 @@ const allProductsCollections=client.db('xwatch-factor').collection('productsColl
 const usersCollection=client.db('xwatch-factor').collection('users');
 const bookingsCollection=client.db('xwatch-factor').collection('bookings');
 const wishListsCollection=client.db('xwatch-factor').collection('wishLists');
+app.get('/jwt',async(req,res)=>{
+    const email=req.query.email;
+    const query={email:email}
+    const user=await usersCollection.findOne(query);
+    if(user){
+        const token=jwt.sign({email},process.env.ACCESS_TOKEN,{expiresIn: '1h'})
+        return res.send({accessToken:token})
+    }
+    res.status(403).send({accessToken:''})
+})
 app.get('/categories',async(req,res)=>{
     const query={};
     const options=await categoriesOptionsCollections.find(query).toArray();
@@ -48,8 +78,12 @@ app.get('/bookings',async(req,res)=>{
     const options=await bookingsCollection.find(query).toArray();
     res.send(options);
 });
-app.get('/products/:email',async(req,res)=>{
+app.get('/products/:email',verifyJWT,async(req,res)=>{
     const email=req.params.email;
+    const decodedEmail=req.decoded.email;
+    if(email!==decodedEmail){
+        return res.status(403).send({message:'forbidden access'})
+    }
     const query={sellers_email:email};
     const sellerProducts=await allProductsCollections.find(query).toArray();
     res.send(sellerProducts);
@@ -92,7 +126,13 @@ app.get('/allusers/:email',async(req,res)=>{
     res.send({isBuyer:user?.status==='Buyer'})
 
 })
-app.put('/users/admin/:id',async(req,res)=>{
+app.put('/users/admin/:id',verifyJWT,async(req,res)=>{
+    const decodedEmail=req.decoded.email;
+    const query={email:decodedEmail};
+    const user=await usersCollection.findOne(query)
+    if(user.role!=='admin'){
+        return res.status(403).send({message:'forbidden access'})
+    }
     const id=req.params.id;
     const filter={_id:ObjectId(id)}
     const options={upsert:true};
@@ -132,12 +172,12 @@ app.post('/users',async(req,res)=>{
     res.send(result);
 });
 
-app.post('/products',async(req,res)=>{
+app.post('/products',verifyJWT,async(req,res)=>{
     const product=req.body;
     const result=await allProductsCollections.insertOne(product);
     res.send(result);
 });
-app.post('/products/wishlists',async(req,res)=>{
+app.post('/products/wishlists',verifyJWT,async(req,res)=>{
     const wishlist=req.body;
     const result=await wishListsCollection.insertOne(wishlist);
     res.send(result);
@@ -147,7 +187,7 @@ app.get('/products/wishlists',async(req,res)=>{
     const result=await wishListsCollection.find(query);
     res.send(result);
 });
-app.get('/products/wishlists/:email',async(req,res)=>{
+app.get('/products/wishlists/:email',verifyJWT,async(req,res)=>{
     const email=req.params.email;
     const filter={email:email}
     const result=await wishListsCollection.find(filter).toArray();
