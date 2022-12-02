@@ -18,7 +18,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 function verifyJWT(req,res,next){
  const authHeader=req.headers.authorization;
- console.log(authHeader);
+ 
  if(!authHeader){
     return res.status(401).send('unauthorised access');
  }
@@ -94,7 +94,6 @@ app.get('/categories/:id',async(req,res)=>{
     const categoryQuery={category:id};
     const productOptions=await allProductsCollections.find(query).toArray();
     const filterCategory=await categoriesOptionsCollections.findOne(categoryQuery);
-    console.log(filterCategory);
     const filterProducts=productOptions.filter(option=>
         option.category_value===filterCategory.category
     );
@@ -182,30 +181,32 @@ app.post('/products/wishlists',verifyJWT,async(req,res)=>{
     const result=await wishListsCollection.insertOne(wishlist);
     res.send(result);
 });
-app.get('/products/wishlists',async(req,res)=>{
-    const query={};
-    const result=await wishListsCollection.find(query);
-    res.send(result);
-});
 app.get('/products/wishlists/:email',verifyJWT,async(req,res)=>{
     const email=req.params.email;
     const filter={email:email}
     const result=await wishListsCollection.find(filter).toArray();
     res.send(result)
 });
-app.post('/bookings',async(req,res)=>{
+app.post('/bookings',verifyJWT,async(req,res)=>{
 
     const booking=req.body;
     const result=await bookingsCollection.insertOne(booking);
     res.send(result);
 });
-app.get('/bookings/:email',async(req,res)=>{
+app.get('/bookings/:email',verifyJWT,async(req,res)=>{
     const email=req.params.email;
     const query={buyers_email:email};
     const bookingProducts=await bookingsCollection.find(query).toArray();
     res.send(bookingProducts);
 
 });
+app.get('/bookings/:id',verifyJWT,async(req,res)=>{
+    const id=req.params.id;
+    const query={_id:ObjectId(id)};
+    const booking=await bookingsCollection.findOne(query);
+    console.log(booking);
+    res.send(booking);
+})
 app.get('/allbookings/:email',async(req,res)=>{
     const email=req.params.email;
     const query={sellers_email:email};
@@ -235,10 +236,10 @@ app.delete('/users/:id',async(req,res)=>{
 app.get('/allproducts/:id',async(req,res)=>{
     const id=req.params.id;
     const filter={_id: ObjectId(id)};
-    console.log(filter)
     const result=await allProductsCollections.findOne(filter);
     res.send(result);
 });
+
 }
 finally{
 
