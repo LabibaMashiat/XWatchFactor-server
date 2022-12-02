@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const port=process.env.PORT || 5000;
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken');
 const app=express();
 
@@ -41,6 +42,7 @@ const allProductsCollections=client.db('xwatch-factor').collection('productsColl
 const usersCollection=client.db('xwatch-factor').collection('users');
 const bookingsCollection=client.db('xwatch-factor').collection('bookings');
 const wishListsCollection=client.db('xwatch-factor').collection('wishLists');
+const paymentsCollection=client.db('xwatch-factor').collection('payments');
 app.get('/jwt',async(req,res)=>{
     const email=req.query.email;
     const query={email:email}
@@ -61,6 +63,36 @@ app.get('/products',async(req,res)=>{
     const options=await allProductsCollections.find(query).toArray();
     res.send(options);
 });
+app.post('/create-payment-intent',async(req,res)=>{
+    const booking=req.body;
+    const price=booking.resale_price;
+    const amount=price*100;
+  
+    const paymentIntent=await stripe.paymentIntents.create({
+      currency: 'usd',
+      amount:amount,
+      "payment_method_types":[
+          "card"
+      ]
+    });
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  });
+  app.post('/payments',async(req,res)=>{
+    const payment=req.body;
+    const result=await paymentsCollection.insertOne(payment);
+    const id=payment.booking_id
+    const filter={_id: ObjectId(id)}
+    const updatedDoc={
+        $set:{
+            paid: true,
+            transactionId: payment.transactionId
+        }
+    }
+    const updatedResult=await bookingsCollection.updateOne(filter,updatedDoc)
+    res.send(result);
+  })
 app.put('/allproducts/:id',async(req,res)=>{
     const id=req.params.id;
     const filter={_id:ObjectId(id)}
@@ -200,13 +232,13 @@ app.get('/bookings/:email',verifyJWT,async(req,res)=>{
     res.send(bookingProducts);
 
 });
-app.get('/bookings/:id',verifyJWT,async(req,res)=>{
+app.get('/paybookings/:id',verifyJWT,async(req,res)=>{
     const id=req.params.id;
     const query={_id:ObjectId(id)};
     const booking=await bookingsCollection.findOne(query);
-    console.log(booking);
+   
     res.send(booking);
-})
+});
 app.get('/allbookings/:email',async(req,res)=>{
     const email=req.params.email;
     const query={sellers_email:email};
